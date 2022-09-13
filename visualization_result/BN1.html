@@ -1,0 +1,129 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+
+<style type="text/css">
+
+        #mynetwork {
+            width: 100%;
+            height: 800px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+
+        
+
+        
+
+        
+</style>
+
+</head>
+
+<body>
+<div id = "mynetwork"></div>
+
+
+<script type="text/javascript">
+
+    // initialize global variables.
+    var edges;
+    var nodes;
+    var network; 
+    var container;
+    var options, data;
+
+    
+    // This method is responsible for drawing the graph, returns the drawn network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        
+
+        // parsing and collecting nodes and edges from the python
+        nodes = new vis.DataSet([{"color": "#c7c7c7", "font": {"size": 36}, "id": "eigen9", "label": "eigen9", "level": 0, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 eigen9 (Gaussian)"}, {"color": "#c7c7c7", "font": {"size": 36}, "id": "eigen8", "label": "eigen8", "level": 1, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 eigen8 (Gaussian)"}, {"color": "#c7c7c7", "font": {"size": 36}, "id": "eigen7", "label": "eigen7", "level": 2, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 eigen7 (Gaussian)"}, {"color": "#c7c7c7", "font": {"size": 36}, "id": "eigen6", "label": "eigen6", "level": 3, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 eigen6 (Gaussian)"}, {"color": "#c7c7c7", "font": {"size": 36}, "id": "eigen3", "label": "eigen3", "level": 3, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 eigen3 (Gaussian)"}, {"color": "#c7c7c7", "font": {"size": 36}, "id": "eigen5", "label": "eigen5", "level": 4, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 eigen5 (Gaussian)"}, {"color": "#c7c7c7", "font": {"size": 36}, "id": "eigen4", "label": "eigen4", "level": 5, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 eigen4 (Gaussian)"}, {"color": "#c7c7c7", "font": {"size": 36}, "id": "eigen2", "label": "eigen2", "level": 5, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 eigen2 (Gaussian)"}, {"color": "#c7c7c7", "font": {"size": 36}, "id": "eigen0", "label": "eigen0", "level": 6, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 eigen0 (Gaussian)"}, {"color": "#c7c7c7", "font": {"size": 36}, "id": "eigen1", "label": "eigen1", "level": 7, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 eigen1 (Gaussian)"}, {"color": "#9467bd", "font": {"size": 36}, "id": "y", "label": "y", "level": 8, "shape": "dot", "size": 45, "title": "\u0423\u0437\u0435\u043b \u0431\u0430\u0439\u0435\u0441\u043e\u0432\u0441\u043a\u043e\u0439 \u0441\u0435\u0442\u0438 y (Logit (LogisticRegression))"}]);
+        edges = new vis.DataSet([{"arrows": "to", "from": "eigen9", "to": "eigen8"}, {"arrows": "to", "from": "eigen9", "to": "eigen2"}, {"arrows": "to", "from": "eigen8", "to": "eigen7"}, {"arrows": "to", "from": "eigen8", "to": "eigen0"}, {"arrows": "to", "from": "eigen7", "to": "eigen6"}, {"arrows": "to", "from": "eigen7", "to": "eigen3"}, {"arrows": "to", "from": "eigen7", "to": "eigen0"}, {"arrows": "to", "from": "eigen7", "to": "y"}, {"arrows": "to", "from": "eigen6", "to": "eigen5"}, {"arrows": "to", "from": "eigen3", "to": "eigen1"}, {"arrows": "to", "from": "eigen5", "to": "eigen4"}, {"arrows": "to", "from": "eigen5", "to": "eigen2"}, {"arrows": "to", "from": "eigen5", "to": "eigen1"}, {"arrows": "to", "from": "eigen2", "to": "eigen0"}, {"arrows": "to", "from": "eigen2", "to": "y"}, {"arrows": "to", "from": "eigen0", "to": "eigen1"}, {"arrows": "to", "from": "eigen1", "to": "y"}]);
+
+        // adding nodes and edges to the graph
+        data = {nodes: nodes, edges: edges};
+
+        var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": false,
+            "type": "continuous"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "layout": {
+        "hierarchical": {
+            "blockShifting": true,
+            "edgeMinimization": true,
+            "enabled": true,
+            "levelSeparation": 150,
+            "parentCentralization": true,
+            "sortMethod": "hubsize",
+            "treeSpacing": 200
+        },
+        "improvedLayout": true,
+        "randomSeed": 0
+    },
+    "physics": {
+        "enabled": true,
+        "hierarchicalRepulsion": {
+            "centralGravity": 0.5,
+            "damping": 0.09,
+            "nodeDistance": 300,
+            "springConstant": 0.01,
+            "springLength": 100
+        },
+        "solver": "hierarchicalRepulsion",
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+        
+        
+
+        
+
+        network = new vis.Network(container, data, options);
+	 
+        
+
+
+        
+
+        return network;
+
+    }
+
+    drawGraph();
+
+</script>
+</body>
+</html>
