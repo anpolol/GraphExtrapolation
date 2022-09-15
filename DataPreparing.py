@@ -4,11 +4,12 @@
 import os
 import collections
 from os import listdir
+
+import numpy as np
 import pandas as pd
 import torch
 from torch_geometric.data import Data
 import random
-import itertools
 
 class DataPreparing:
     '''
@@ -20,23 +21,24 @@ class DataPreparing:
         self.name = name
         path_initial = './datasets/' + name
         self.indices = self.indices_exctracting(path_initial)
-        self.dataset = self.run(name, self.indices)
+        self.dataset, self.n_min = self.run(name, self.indices)
         self.N = len(self.dataset)
-
-
         super().__init__()
 
     def run(self, name, indices):
-        dataset = [ ]
+        dataset = []
         y_max = 0
+        n_min = np.inf
         for i in list(indices['first']):
             for j in range(indices[indices['first'] == i]['second'].item()):
                 G = self.data_load(name, i, j)
                 dataset.append(G)
+                if G.num_nodes <= n_min:
+                    n_min=G.num_nodes
                 if G.y.item() > y_max:
                     y_max = G.y.item()
         self.num_classes = int(y_max+1)
-        return dataset
+        return dataset, n_min
 
     def indices_exctracting(self, path_initial): # нужно узнать максимальное число графов и максимальное число окружений (первый индекс)
         names_datasets = listdir(path_initial)

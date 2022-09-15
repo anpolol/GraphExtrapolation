@@ -48,7 +48,7 @@ class TrainingModel():
         self.train_dataset, self.test_dataset = self.dataobj.split_env(0.8)
         self.device = device
         if causal:
-            causality = CausalProcess(self.train_dataset, self.test_dataset, score_func=score_func, init_edges=init_edges, remove_init_edges=remove_init_edges, white_list=white_list)
+            causality = CausalProcess(self.train_dataset, self.test_dataset, self.dataobj.n_min, score_func=score_func, init_edges=init_edges, remove_init_edges=remove_init_edges, white_list=white_list)
             self.train_dataset, self.test_dataset = causality.run()
 
         #self.train_dataset, self.test_dataset = self.train_dataset.to(self.device), self.test_dataset.to(self.device)

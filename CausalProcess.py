@@ -23,9 +23,10 @@ def func(x):
 class CausalProcess:
     '''
     preprocessing with causality
+    n_min - минимальный размер графа из всех графов в датасете
     '''
 
-    def __init__(self, train_dataset: list, test_dataset: list, score_func: str, init_edges: bool,
+    def __init__(self, train_dataset: list, test_dataset: list, n_min: int, score_func: str, init_edges: bool,
                  remove_init_edges: bool, white_list):
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
@@ -33,6 +34,7 @@ class CausalProcess:
         self.init_edges = init_edges
         self.remove_init_edges = remove_init_edges
         self.white_list = white_list
+        self.n_min = n_min
 
         if self.score_func == 'K2':
             self.score = K2Score
@@ -58,14 +60,15 @@ class CausalProcess:
         return train_dataset, test_dataset
 
     def data_eigen_exctractor(self, dataset):
-        columns_list = list(map(lambda x: 'eigen' + str(x), range(10)))
+
+        columns_list = list(map(lambda x: 'eigen' + str(x), range(self.n_min)))
         data_bamt = pd.DataFrame(columns=columns_list + ['y'])
         for gr in dataset:
             A = to_dense_adj(gr.edge_index)
             eig = torch.eig(A.reshape(A.shape[1], A.shape[2]))[0].T[0].T
             ordered, indices = torch.sort(eig[:gr.num_nodes], descending=True)
 
-            to_append = pd.Series(ordered[:10].tolist() + [gr.y], index=data_bamt.columns)
+            to_append = pd.Series(ordered[:self.n_min].tolist() + [gr.y], index=data_bamt.columns)
             data_bamt = data_bamt.append(to_append, ignore_index=True)
 
         return data_bamt
@@ -86,11 +89,15 @@ class CausalProcess:
         params = dict()
         params['remove_init_edges'] = self.remove_init_edges
         if self.init_edges:
-            params['init_edges'] = [('eigen0', 'y'), ('eigen1', 'y'), ('eigen2', 'y'), ('eigen3', 'y'), ('eigen4', 'y'),
-                                    ('eigen5', 'y'), ('eigen6', 'y'), ('eigen7', 'y'), ('eigen8', 'y'), ('eigen9', 'y')]
+
+            params['init_edges'] = list(map(lambda x: ('eigen'+str(x), 'y'), list(range(self.n_min)))) + list(map(lambda x: ('y', 'eigen'+str(x)), list(range(self.n_min))))
+
+            print('init_edges', params['init_edges'])
         if self.white_list:
-            params['white_list'] = [('eigen0', 'y'), ('eigen1', 'y'), ('eigen2', 'y'), ('eigen3', 'y'), ('eigen4', 'y'),
-                                    ('eigen5', 'y'), ('eigen6', 'y'), ('eigen7', 'y'), ('eigen8', 'y'), ('eigen9', 'y')]
+
+            params['white_list'] = list(map(lambda x: ('eigen'+str(x), 'y'), list(range(self.n_min)))) + list(map(lambda x: ('y', 'eigen'+str(x)), list(range(self.n_min))))
+
+            print('white_list', params['white_list'])
         #   params = {'init_edges': [('eigen0', 'y'), ('eigen1', 'y'), ('eigen2', 'y'), ('eigen3', 'y'), ('eigen4', 'y'),
         #                           ('eigen5', 'y'), ('eigen6', 'y'), ('eigen7', 'y'), ('eigen8', 'y'), ('eigen9', 'y')],
         #           'remove_init_edges': False,
