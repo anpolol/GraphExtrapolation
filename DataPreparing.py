@@ -34,7 +34,7 @@ class DataPreparing:
                 G = self.data_load(name, i, j)
                 dataset.append(G)
                 if G.num_nodes <= n_min:
-                    n_min=G.num_nodes
+                    n_min = G.num_nodes
                 if G.y.item() > y_max:
                     y_max = G.y.item()
         self.num_classes = int(y_max+1)
@@ -78,7 +78,7 @@ class DataPreparing:
         G = Data(edge_index=edge_index, x=x,y=y,env = i,num_nodes_features = x.shape[1])
         return G
 
-    def split_random(self,p):
+    def split_random(self, p):
         shuffled_dataset = random.sample(self.dataset, len(self.dataset))
         train_data = shuffled_dataset[:int(self.N*p)]
         test_data = shuffled_dataset[int(self.N*p):]
@@ -86,22 +86,28 @@ class DataPreparing:
 
     def split_env(self, p):
 
-        #здесь проценты не будут сохраняться
-        #сначала надо отобрать какие именно контексты подходят для train_percent деления
-        #TODO сделать автоматическое разделение на трейн тест, причем чтоб были всевозможные варианты и он каждый раз рандомно выбирал
-        # look in junk.ipynb for a sample with combinations()
-        if p == 0.7:
-            max_env = 82
-        elif p == 0.8:
-            max_env = 112
-        elif p == 0.9:
-            max_env = 142
+        # здесь проценты не будут сохраняться прям точь в точь
+        # жадный алгоритм
 
+        train_data = []
+        test_data = []
+        train_split = int(len(self.dataset)*p)
 
-        train_split = sum(self.indices['second'].iloc[:max_env]) + max_env
+        env_list = self.indices['first'].tolist()
 
-        train_data = self.dataset[:train_split+1]
-        test_data = self.dataset[train_split+1:]
+        while len(train_data) < train_split:
+            random.shuffle(env_list)
+            k = (env_list.pop())
+            number_of_graphs = int(self.indices[self.indices['first'] == k]['second']) + 1
+            train_indices = sum(self.indices[self.indices['first'] < k]['second']) + k
+            train_data += self.dataset[train_indices:train_indices+number_of_graphs]
+
+        for k in env_list:
+            number_of_graphs = int(self.indices[self.indices['first'] == k]['second']) + 1
+            test_indices = sum(self.indices[self.indices['first'] < k]['second']) + k
+
+            test_data += self.dataset[test_indices:test_indices + number_of_graphs]
+        print(len(self.dataset), len(train_data),len(test_data))
 
         return train_data, test_data
 

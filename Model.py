@@ -42,10 +42,18 @@ class GCN(torch.nn.Module):
 
 
 class TrainingModel():
-    def __init__(self, name: str, causal: bool, epoch: int, device: str, init_edges: bool, remove_init_edges: bool, white_list: bool, score_func: str = None, ):
+    def __init__(self, name: str, causal: bool, epoch: int, device: str, init_edges: bool, remove_init_edges: bool, white_list: bool, score_func: str, **kwargs: dict):
         self.epoch = epoch
-        self.dataobj = DataPreparing(name)
-        self.train_dataset, self.test_dataset = self.dataobj.split_env(0.8)
+        if len(kwargs)>0:
+            print('here')
+            self.train_dataset = kwargs['train']
+            self.test_dataset = kwargs['test']
+            self.val_dataset = kwargs['val']
+        else:
+            self.dataobj = DataPreparing(name)
+            self.train_dataset, self.test_dataset = self.dataobj.split_env(0.8)
+            train_dataset, self.val_dataset = self.train_dataset[:int(len(self.train_dataset) * 0.7)], self.train_dataset[int(len(self.train_dataset) * 0.7):]
+
         self.device = device
         if causal:
             causality = CausalProcess(self.train_dataset, self.test_dataset, self.dataobj.n_min, score_func=score_func, init_edges=init_edges, remove_init_edges=remove_init_edges, white_list=white_list)
@@ -117,34 +125,31 @@ class TrainingModel():
             accs_train.append(train_acc)
             accs_test.append(test_acc)
             print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
-        self.plot(losses,accs_train,accs_test)
+        self.plot(losses, accs_train, accs_test)
 
 
 class TrainOptuna(TrainingModel):
-    def objective(self,trial):
+    def objective(self, trial):
         # варьируем параметры
-
-        train_dataset, val_dataset = self.train_dataset[:int(len(self.train_dataset)*0.7)], self.train_dataset[int(len(self.train_dataset)*0.7):]
-
-        train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=64, shuffle=True)
+        train_loader = DataLoader(self.train_dataset, batch_size=64, shuffle=True)
+        test_loader = DataLoader(self.test_dataset, batch_size=64, shuffle=True)
 
         hidden_layer = trial.suggest_categorical("hidden_layer", [32, 64, 128, 256])
         dp = trial.suggest_float("dropout", 0.0, 0.5, step=0.1)
         size = trial.suggest_categorical("size of network, number of convs", [1, 2, 3])
         learning_rate = trial.suggest_float("lr", 5e-3, 1e-2)
 
-        model = GCN(hidden_channels=hidden_layer, num_node_features=self.train_dataset[0].num_node_features, num_classes=self.dataobj.num_classes, dropout=dp,size=size)
+        model = GCN(hidden_channels = hidden_layer, num_node_features = self.train_dataset[0].num_node_features, num_classes = self.dataobj.num_classes, dropout=dp, size=size)
         model.to(self.device)
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
         criterion = torch.nn.CrossEntropyLoss()
 
         for epoch in range(self.epoch):
-            loss = self.train(model,train_loader,criterion,optimizer)
+            loss = self.train(model, train_loader, criterion, optimizer)
 
-        val_acc = self.test(model,val_loader)
+        test_acc = self.test(model, test_loader)
 
-        return val_acc
+        return test_acc
 
 
     def run(self, number_of_trials):

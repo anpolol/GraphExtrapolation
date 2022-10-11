@@ -11,7 +11,6 @@ import numpy as np
 
 def func(x):
     if x[1] == 'y' and len(x[0]) > 1:
-
         number = int(x[0][5:])
     elif x[0] == 'y' and len(x[1]) > 1:
         number = int(x[1][5:])
@@ -55,6 +54,7 @@ class CausalProcess:
         ll = list(map(lambda x: bn.weights[tuple(x)], left_edges))
         N = len(ll) #TODO подумать: мб тут было бы логичнее взять N = число переменных из которых строилась bn
         weights_preprocessed = list(map(lambda x: x * N / sum(ll), ll))
+        print(weights_preprocessed,left_vertices)
         train_dataset = self.convolve(self.train_dataset, weights_preprocessed, left_vertices)
         test_dataset = self.convolve(self.test_dataset, weights_preprocessed, left_vertices)
         return train_dataset, test_dataset
@@ -120,7 +120,9 @@ class CausalProcess:
             ordered, indices = torch.sort(eig[:graph.num_nodes], descending=True)
             lef = indices[left_vertices]
             zeroed = torch.tensor(list(set(range(len(eig))) - set(lef.tolist())))
-            eig[zeroed] = 0
+            #print(zeroed)
+            if len(zeroed)>0:
+                eig[zeroed] = 0
 
             for e, d in enumerate(lef):
                 eig[d] = eig[d] * weights[e]
